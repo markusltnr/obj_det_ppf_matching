@@ -55,12 +55,14 @@
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
   <build_depend>obj_det_ppf_matching_msgs</build_depend>
+  <build_depend>table_extractor</build_depend>
   <build_depend>pcl_conversions</build_depend>
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
   <build_export_depend>obj_det_ppf_matching_msgs</build_export_depend>
+  <build_export_depend>table_extractor</build_export_depend>
   <build_export_depend>pcl_conversions</build_export_depend>
 
   <exec_depend>mongodb_store</exec_depend>
@@ -68,6 +70,7 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>obj_det_ppf_matching_msgs</exec_depend>
+  <exec_depend>table_extractor</exec_depend>
   <exec_depend>pcl_conversions</exec_depend>
 
 

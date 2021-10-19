@@ -2,9 +2,12 @@ cmake_minimum_required(VERSION 3.0.2)
 project(obj_det_ppf_matching)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+set (CMAKE_CXX_STANDARD 14)
+
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(OpenCV 3 REQUIRED)
+
 
 #SET(CMAKE_PREFIX_PATH "/home/edith/Software/pcl-1.10.0/build/install")
 #SET(PCL_DIR "/home/edith/Software/pcl-1.10.0/build")
@@ -21,12 +24,31 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   obj_det_ppf_matching_msgs
+  table_extractor
   pcl_conversions
 )
 
 ## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
-find_library(PPF_RECOGNIZER_LIB NAMES ppf-recognizer PATHS /home/edith/Projects/TidyUpVisionPipeline/build/v4r_ppf)
+#list(APPEND CMAKE_MODULE_PATH "/home/edith/Projects/TidyUpVisionPipeline/v4r_ppf/cmake")
+
+add_subdirectory(v4r_ppf)
+
+find_package( PCL REQUIRED )
+
+find_package(Boost REQUIRED COMPONENTS system program_options)
+#find_package(OpenMP)
+#find_package(CMPH REQUIRED)
+# Glog  -- only works if glog was built with cmake ?
+# libgoogle-glog-dev package doesn't include the cmake config files
+#find_package(glog 0.4.0 REQUIRED)
+#find_library(PPF_RECOGNIZER_LIB NAMES ppf-recognizer PATHS /home/edith/Projects/TidyUpVisionPipeline/build/v4r_ppf)
+#find_library(V4R_EXTRACTS_LIB NAMES v4r-extracts PATHS /home/edith/Projects/TidyUpVisionPipeline/build/v4r_ppf)
+#find_library(PPF_LIB NAMES ppf PATHS /home/edith/Projects/TidyUpVisionPipeline/build/v4r_ppf)
+
+
+SET(cd_path "/home/edith/Projects/TidyUpVisionPipeline/change_detection")
+#file(GLOB_RECURSE cd_sources ${cd_path}/src/*.cpp)
+#message(STATUS ${cd_sources})
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -116,7 +138,7 @@ find_library(PPF_RECOGNIZER_LIB NAMES ppf-recognizer PATHS /home/edith/Projects/
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES obj_det_ppf_matching
-  CATKIN_DEPENDS mongodb_store roscpp rospy std_msgs obj_det_ppf_matching_msgs pcl_conversions
+  CATKIN_DEPENDS mongodb_store roscpp rospy std_msgs obj_det_ppf_matching_msgs table_extractor pcl_conversions
 #  DEPENDS system_lib
 )
 
@@ -133,6 +155,7 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
   #"/home/edith/Projects/TidyUpVisionPipeline/v4r_ppf/include/"
+  ${cd_path}/include
 )
 
 ## Declare a C++ library
@@ -148,7 +171,12 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/obj_det_ppf_matching_node.cpp include/obj_det_ppf_matching_node.h)
+add_executable(${PROJECT_NAME}_node src/obj_det_ppf_matching_node.cpp
+    ${cd_path}/src/change_detection.cpp ${cd_path}/src/color_histogram.cpp ${cd_path}/src/local_object_verification.cpp
+    ${cd_path}/src/object_matching.cpp ${cd_path}/src/plane_object_extraction.cpp ${cd_path}/src/scene_differencing_points.cpp)
+
+add_executable(test_service_node src/test_service_node.cpp)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,14 +187,25 @@ add_executable(${PROJECT_NAME}_node src/obj_det_ppf_matching_node.cpp include/ob
 ## Add cmake target dependencies of the executable
 ## same as for the lib${PCL_LIBRARIES}rary above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(test_service_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
-   ${PCL_LIBRARIES}
+   ppf-recognizer
    ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
    ${OpenCV_LIBS}
-   ${PPF_RECOGNIZER_LIB} #ppf-recognizer
+   Boost::program_options
  )
+
+target_link_libraries(test_service_node
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${OpenCV_LIBS}
+   Boost::program_options
+ )
+
+
 
 #############
 ## Install ##
