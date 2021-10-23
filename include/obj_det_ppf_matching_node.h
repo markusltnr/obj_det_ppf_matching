@@ -7,6 +7,7 @@
 #include "ros/ros.h"
 #include "mongodb_store/message_store.h"
 #include <pcl_conversions/pcl_conversions.h>
+#include "tf/transform_datatypes.h"
 
 #include <pcl/console/parse.h>
 #include <pcl/io/pcd_io.h>
@@ -17,12 +18,17 @@
 #include "obj_det_ppf_matching_msgs/det_and_compare_obj.h"
 #include "obj_det_ppf_matching_msgs/CandidateObject.h"
 #include "obj_det_ppf_matching_msgs/Object.h"
-#include "obj_det_ppf_matching_msgs/CandidateObject.h"
+#include "obj_det_ppf_matching_msgs/ObjectStateClass.h"
 
 #include <detected_object.h>
 #include <mathhelpers.h>
 #include <settings.h>
 #include <change_detection.h>
+
+//needed to extract home directory
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 using namespace obj_det_ppf_matching_msgs;
 
@@ -32,6 +38,17 @@ typedef Eigen::Matrix<float,4,4,Eigen::DontAlign> Matrix4f_NotAligned;
 typedef Eigen::Matrix<float,4,1,Eigen::DontAlign> Vector4f_NotAligned;
 
 static const std::string obj_id_path = "next_obj_id.txt"; //we store the latest used object ID in a file
+
+template <typename DetectedObject>
+ostream& operator<<(ostream& output, std::map<int, DetectedObject> const& values)
+{
+    for (auto const & value : values)
+    {
+        const int &id =  value.first;
+        output << id << " ";
+    }
+    return output;
+}
 
 struct Reconstruction {
     pcl::PointCloud<PointNormal>::Ptr reco_cloud;
@@ -59,7 +76,17 @@ private:
     std::string reco_folder_;
     std::string ppf_model_path_;
     std::string ppf_config_path_;
-    std::string debug_path_permanent_obj_;
+    std::string debug_path_det_obj_;
+
+    //needed for tracking the matching process
+    std::map<int, DetectedObject> new_obj;
+    std::map<int, DetectedObject> removed_obj;
+    std::map<int, DetectedObject> pot_new_obj;
+    std::map<int, DetectedObject> pot_removed_obj;
+    std::map<int, DetectedObject> ref_displaced_obj;
+    std::map<int, DetectedObject> curr_displaced_obj;
+    std::map<int, DetectedObject> curr_static_obj;
+    std::map<int, DetectedObject> ref_static_obj;
 
 
     bool readRecoFromFile(std::string input_path, const pcl::PointCloud<PointNormal>::Ptr &cloud);
@@ -67,9 +94,14 @@ private:
     std::vector<int> deleteModelObjectsFromDB(std::vector<int> table_numbers);
     std::vector<int> deleteCandidateObjectsFromDB(std::vector<int> table_numbers);
     std::map<int, Reconstruction> prepareRecos (std::vector<int> interested_tables);
+    void upsampleAndRefineObjects(pcl::PointCloud<PointNormal>::Ptr orig_model_cloud, std::vector<DetectedObject> objects);
+    void createPPFModelFolders (std::map<int, std::vector<DetectedObject> > &model_objects);
+    bool updateDetectedObjects(std::vector<DetectedObject>& ref_result, std::vector<DetectedObject>& curr_result);
+    int extractTableID(const pcl::PointCloud<pcl::PointXYZL>::Ptr label_cloud, const DetectedObject &obj);
 
     std::tuple<int, DetectedObject> fromMsgToDetObj(obj_det_ppf_matching_msgs::Object obj_msg); //returns table_id and object
-    obj_det_ppf_matching_msgs::Object fromDetObjToMsg(DetectedObject obj, int table_id);
+    obj_det_ppf_matching_msgs::Object fromDetObjToObjMsg(const DetectedObject obj, int table_id);
+    obj_det_ppf_matching_msgs::CandidateObject fromDetObjToCandidateObjMsg(const DetectedObject obj, int table_id);
 
 
     //    boost::shared_ptr<image_transport::ImageTransport> it_;
