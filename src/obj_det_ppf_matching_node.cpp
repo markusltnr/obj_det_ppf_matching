@@ -96,7 +96,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
     ref_displaced_obj.clear();
     ref_static_obj.clear();
     curr_displaced_obj.clear();
-    ref_displaced_obj.clear();
+    curr_static_obj.clear();
 
     std::vector<int> interested_tables = req.table_numbers;
 
@@ -155,6 +155,8 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 obj.setObjectCloud(refined_normals_cloud);
                 table_object_map[table_id].push_back(obj);
                 nr_det_objects++;
+
+                pcl::io::savePCDFileBinary(reco.debug_path + "/"+ std::to_string(obj.getID()) +".pcd", *obj.getObjectCloud());
             }
         }
     }
@@ -319,6 +321,8 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
     removed_obj = pot_removed_obj;
     new_obj = pot_new_obj;
 
+    int highest_model_id = 0;
+
     //update models in DB
     deleteModelObjectsFromDB(interested_tables);
     std::map<int, DetectedObject>::iterator obj_map_it;
@@ -329,6 +333,9 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
         obj_det_ppf_matching_msgs::Object obj_msg = fromDetObjToObjMsg(obj, table_id);
 
         message_store_->insertNamed(std::to_string(obj.getID()), obj_msg);
+
+        if (highest_model_id < obj.getID())
+            highest_model_id = obj.getID();
     }
     for (obj_map_it = ref_displaced_obj.begin(); obj_map_it != ref_displaced_obj.end(); obj_map_it++) {
         DetectedObject obj = obj_map_it->second;
@@ -337,6 +344,9 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
         obj_det_ppf_matching_msgs::Object obj_msg = fromDetObjToObjMsg(obj, table_id);
 
         message_store_->insertNamed(std::to_string(obj.getID()), obj_msg);
+
+        if (highest_model_id < obj.getID())
+            highest_model_id = obj.getID();
     }
     for (obj_map_it = ref_static_obj.begin(); obj_map_it != ref_static_obj.end(); obj_map_it++) {
         DetectedObject &obj = obj_map_it->second;
@@ -345,6 +355,9 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
         obj_det_ppf_matching_msgs::Object obj_msg = fromDetObjToObjMsg(obj, table_id);
 
         message_store_->insertNamed(std::to_string(obj.getID()), obj_msg);
+
+        if (highest_model_id < obj.getID())
+            highest_model_id = obj.getID();
     }
 
     //insert candidate objects into DB
@@ -379,6 +392,13 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
     std::cout << "Displaced objects in current: " << curr_displaced_obj << std::endl;
     std::cout << "Static objects in reference: " << ref_static_obj << std::endl;
     std::cout << "Static objects in current: " << curr_static_obj << std::endl;
+
+
+    //write the latest used ID to file --> find the highest object ID for models (candidate objects get deleted anyway for each run)
+    std::ofstream id_file;
+    id_file.open (obj_id_path);
+    id_file << std::to_string(highest_model_id);
+    id_file.close();
 
     ROS_INFO("Finished service call");
 }
@@ -520,7 +540,16 @@ void DetectAndMatchObjectsROS::createPPFModelFolders (std::map<int, std::vector<
     for (std::map<int, std::vector<DetectedObject> >::iterator m_it = model_objects.begin(); m_it != model_objects.end(); m_it++) {
         for (DetectedObject &obj : m_it->second) {
             std::string obj_folder = ppf_model_path_ + std::to_string(obj.getID()); //PPF uses the folder name as model_id!
-            boost::filesystem::create_directories(obj_folder);
+
+            //check if already stored pcd file has the same size as the cloud from the DB
+            pcl::PointCloud<PointNormal>::Ptr stored_pcd_file(new pcl::PointCloud<PointNormal>);
+            if (boost::filesystem::exists(obj_folder) && pcl::io::loadPCDFile(obj_folder + "/3D_model.pcd", *stored_pcd_file) == 0) { //successfully read the pcd-file
+                if (stored_pcd_file->size() != obj.getObjectCloud()->size()) { //delete ppf-hash-file
+                    boost::filesystem::remove_all(obj_folder);
+                }
+            }
+
+            boost::filesystem::create_directories(obj_folder); //if the folder exist already, it does not get created
             pcl::io::savePCDFile(obj_folder + "/3D_model.pcd", *(obj.getObjectCloud()));
             obj.object_folder_path_ = obj_folder;
 

@@ -31,7 +31,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## System dependencies are found with CMake's conventions
 #list(APPEND CMAKE_MODULE_PATH "/home/edith/Projects/TidyUpVisionPipeline/v4r_ppf/cmake")
 
-add_subdirectory(v4r_ppf)
+add_subdirectory(v4r_ppf) #this only works for folders that are physically a subdirectory. we can not set a path here
 
 find_package( PCL REQUIRED )
 
