@@ -185,7 +185,6 @@ add_executable(${PROJECT_NAME}_node src/obj_det_ppf_matching_node.cpp
 ## Add cmake target dependencies of the executable
 ## same as for the lib${PCL_LIBRARIES}rary above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(test_service_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
@@ -195,14 +194,6 @@ target_link_libraries(${PROJECT_NAME}_node
    ${OpenCV_LIBS}
    Boost::program_options
  )
-
-target_link_libraries(test_service_node
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
-   ${OpenCV_LIBS}
-   Boost::program_options
- )
-
 
 
 #############
