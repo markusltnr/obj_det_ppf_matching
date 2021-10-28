@@ -401,6 +401,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
     id_file.close();
 
     ROS_INFO("Finished service call");
+    return true;
 }
 
 int DetectAndMatchObjectsROS::extractTableID(const pcl::PointCloud<pcl::PointXYZL>::Ptr label_cloud, const DetectedObject &obj) {
@@ -616,7 +617,7 @@ std::map<int, Reconstruction> DetectAndMatchObjectsROS::prepareRecos (std::vecto
         plane_coeffs << table->plane.x, table->plane.y, table->plane.z, table->plane.d;
 
         //read transformation from camera to map frame
-        Matrix4f_NotAligned transformation = transformationParser(reco_folder_ + "/log.txt");
+        Matrix4f_NotAligned transformation = transformationParser(reco_folder_ + "/read_rosbag/plane_" + std::to_string(table_it->first) +"/log.txt");
 
         //transform the reco
         pcl::transformPointCloudWithNormals(*reco_cloud, *reco_cloud, transformation.inverse());
@@ -885,14 +886,19 @@ bool DetectAndMatchObjectsROS::initialize (int argc, char ** argv)
     nh_.reset( new ros::NodeHandle ( "~" ) );
     message_store_.reset(new mongodb_store::MessageStoreProxy(*nh_));
 
-    if (!nh_->getParam("reco_folder", reco_folder_)) {
+    nh_->param<std::string>("reco_folder", reco_folder_, "/home/v4r/data");
+    nh_->param<std::string>("ppf_config", ppf_config_path_, "/home/v4r/catkin_ws/src/obj_det_ppf_matching/v4r_ppf/cfg/ppf_pose_estimation_config.ini");
+        
+    /*
+    if (!nh_->param<std::string>("reco_folder", reco_folder_, "/home/v4r/data/tidy_up_pipeline/")) {
         ROS_ERROR("Reconstruction directory is not set. Must be set with ROS parameter \"reco_folder\"!");
         return false;
     }
-    if (!nh_->getParam("ppf_config", ppf_config_path_)) {
+    if (!nh_->param<std::string>("ppf_config", ppf_config_path_, "/home/v4r/catkin_ws/src/obj_det_ppf_matching/v4r_ppf/cfg/ppf_pose_estimation_config.ini")) {
         ROS_ERROR("Path to ppf config file is not set. Must be set with ROS parameter \"ppf_config\"!");
         return false;
     }
+    */
     //optional, otherwise it will be stored in the working direcotry
     nh_->getParam("ppf_model_folder", ppf_model_path_);
     nh_->getParam("debug_path_det_obj", debug_path_det_obj_);
