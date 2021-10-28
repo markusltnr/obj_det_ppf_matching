@@ -4,7 +4,7 @@ project(obj_det_ppf_matching)
 ## Compile as C++11, supported in ROS Kinetic and newer
 set (CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 find_package(OpenCV 3 REQUIRED)
 
@@ -174,8 +174,6 @@ include_directories(
 add_executable(${PROJECT_NAME}_node src/obj_det_ppf_matching_node.cpp
     ${cd_path}/src/change_detection.cpp ${cd_path}/src/color_histogram.cpp ${cd_path}/src/local_object_verification.cpp
     ${cd_path}/src/object_matching.cpp ${cd_path}/src/plane_object_extraction.cpp ${cd_path}/src/scene_differencing_points.cpp)
-
-add_executable(test_service_node src/test_service_node.cpp)
 
 
 ## Rename C++ executable without prefix
