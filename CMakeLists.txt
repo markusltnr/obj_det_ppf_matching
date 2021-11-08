@@ -24,7 +24,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   obj_det_ppf_matching_msgs
-  table_extractor
+  edith_msgs
   pcl_conversions
 )
 
@@ -46,7 +46,7 @@ find_package(Boost REQUIRED COMPONENTS system program_options)
 #find_library(PPF_LIB NAMES ppf PATHS /home/edith/Projects/TidyUpVisionPipeline/build/v4r_ppf)
 
 
-SET(cd_path "/home/edith/Projects/TidyUpVisionPipeline/change_detection")
+SET(cd_path "/home/v4r/catkin_ws/src/tidyupvisionpipeline/change_detection")
 #file(GLOB_RECURSE cd_sources ${cd_path}/src/*.cpp)
 #message(STATUS ${cd_sources})
 
@@ -138,7 +138,7 @@ SET(cd_path "/home/edith/Projects/TidyUpVisionPipeline/change_detection")
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES obj_det_ppf_matching
-  CATKIN_DEPENDS mongodb_store roscpp rospy std_msgs obj_det_ppf_matching_msgs table_extractor pcl_conversions
+  CATKIN_DEPENDS mongodb_store roscpp rospy std_msgs obj_det_ppf_matching_msgs edith_msgs pcl_conversions
 #  DEPENDS system_lib
 )
 

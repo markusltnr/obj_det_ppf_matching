@@ -588,17 +588,17 @@ std::map<int, Reconstruction> DetectAndMatchObjectsROS::prepareRecos (std::vecto
     std::map<int, Reconstruction> recos;
 
     /// get all extracted planes from DB
-    std::map<int, boost::shared_ptr<table_extractor::Table>> tables = getExtractedTablesFromDB();
+    std::map<int, boost::shared_ptr<edith_msgs::Table>> tables = getExtractedTablesFromDB();
     ROS_INFO("extracted tables from DB. Found %ld table", tables.size());
 
     if (interested_tables.size() == 0) { //get all available table numbers
-        for(std::map<int, boost::shared_ptr<table_extractor::Table>>::iterator it = tables.begin(); it != tables.end(); ++it) {
+        for(std::map<int, boost::shared_ptr<edith_msgs::Table>>::iterator it = tables.begin(); it != tables.end(); ++it) {
             interested_tables.push_back(it->first);
         }
     }
 
     /// for each table get reconstruction
-    std::map<int, boost::shared_ptr<table_extractor::Table>>::iterator table_it;
+    std::map<int, boost::shared_ptr<edith_msgs::Table>>::iterator table_it;
     for (table_it = tables.begin(); table_it != tables.end(); table_it++) {
         if (std::find(interested_tables.begin(), interested_tables.end(), table_it->first) == interested_tables.end())
             continue;
@@ -612,7 +612,7 @@ std::map<int, Reconstruction> DetectAndMatchObjectsROS::prepareRecos (std::vecto
         }
 
         /// read plane parameters
-        boost::shared_ptr<table_extractor::Table> table = table_it->second;
+        boost::shared_ptr<edith_msgs::Table> table = table_it->second;
         Eigen::Vector4f plane_coeffs;
         plane_coeffs << table->plane.x, table->plane.y, table->plane.z, table->plane.d;
 
@@ -718,13 +718,13 @@ std::vector<int> DetectAndMatchObjectsROS::deleteModelObjectsFromDB(std::vector<
     return del_model_ids;
 }
 
-std::map<int, boost::shared_ptr<table_extractor::Table>> DetectAndMatchObjectsROS::getExtractedTablesFromDB() {
-    std::map<int, boost::shared_ptr<table_extractor::Table>> extracted_tables;
+std::map<int, boost::shared_ptr<edith_msgs::Table>> DetectAndMatchObjectsROS::getExtractedTablesFromDB() {
+    std::map<int, boost::shared_ptr<edith_msgs::Table>> extracted_tables;
 
     // get all tables from DB
-    std::vector< boost::shared_ptr<table_extractor::Table> > results;
-    message_store_->query<table_extractor::Table>(results);
-    BOOST_FOREACH( boost::shared_ptr<table_extractor::Table> p,  results)
+    std::vector< boost::shared_ptr<edith_msgs::Table> > results;
+    message_store_->query<edith_msgs::Table>(results);
+    BOOST_FOREACH( boost::shared_ptr<edith_msgs::Table> p,  results)
     {
         extracted_tables[p->id] = p;
     }
@@ -739,7 +739,7 @@ std::tuple<int, DetectedObject> DetectAndMatchObjectsROS::fromMsgToDetObj(obj_de
     pcl::fromROSMsg(obj_msg.plane_cloud, *plane_cloud);
 
     pcl::ModelCoefficients::Ptr plane_coeffs(new pcl::ModelCoefficients);
-    table_extractor::Plane plane_msg = obj_msg.plane_coeffs;
+    edith_msgs::Plane plane_msg = obj_msg.plane_coeffs;
     std::vector<float> coeff_vec {plane_msg.x, plane_msg.y, plane_msg.z, plane_msg.d};
     plane_coeffs->values = coeff_vec;
 
@@ -764,7 +764,7 @@ obj_det_ppf_matching_msgs::Object DetectAndMatchObjectsROS::fromDetObjToObjMsg(c
     pcl::toROSMsg(*(obj.plane_cloud_), plane_cloud_msg);
     obj_msg.plane_cloud = plane_cloud_msg;
 
-    table_extractor::Plane plane_msg;
+    edith_msgs::Plane plane_msg;
     plane_msg.x = obj.plane_coeffs_->values[0];
     plane_msg.y = obj.plane_coeffs_->values[1];
     plane_msg.z = obj.plane_coeffs_->values[2];

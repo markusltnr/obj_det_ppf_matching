@@ -13,7 +13,7 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/ply_io.h>
 
-#include "table_extractor/Table.h"
+#include "edith_msgs/Table.h"
 #include "obj_det_ppf_matching_msgs/extract_permanent_objects.h"
 #include "obj_det_ppf_matching_msgs/det_and_compare_obj.h"
 #include "obj_det_ppf_matching_msgs/CandidateObject.h"
@@ -72,7 +72,7 @@ private:
     ros::ServiceServer extract_perm_objs_;
     ros::ServiceServer det_and_compare_objects_;
 
-    std::map<int, boost::shared_ptr<table_extractor::Table>> extracted_tables;
+    std::map<int, boost::shared_ptr<edith_msgs::Table>> extracted_tables;
     std::string reco_folder_;
     std::string ppf_model_path_;
     std::string ppf_config_path_;
@@ -127,7 +127,7 @@ public:
                                   det_and_compare_obj::Response & response);
 
     bool initialize (int argc, char ** argv);
-    std::map<int, boost::shared_ptr<table_extractor::Table>> getExtractedTablesFromDB();
+    std::map<int, boost::shared_ptr<edith_msgs::Table>> getExtractedTablesFromDB();
     std::map<int, std::vector<DetectedObject> > getModelObjectsFromDB();
 };
 
