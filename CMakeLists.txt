@@ -23,7 +23,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  obj_det_ppf_matching_msgs
   edith_msgs
   pcl_conversions
 )
@@ -138,7 +137,7 @@ SET(cd_path "/home/v4r/catkin_ws/src/tidyupvisionpipeline/change_detection")
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES obj_det_ppf_matching
-  CATKIN_DEPENDS mongodb_store roscpp rospy std_msgs obj_det_ppf_matching_msgs edith_msgs pcl_conversions
+  CATKIN_DEPENDS mongodb_store roscpp rospy std_msgs edith_msgs pcl_conversions
 #  DEPENDS system_lib
 )
 
