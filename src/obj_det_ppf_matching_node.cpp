@@ -29,11 +29,11 @@ bool DetectAndMatchObjectsROS::extractPermanentObjects (extract_permanent_object
             cd_->objectRegionGrowing(reco_cloud_ds, det_objects);  //this removes very big clusters after growing
             cd_->mergeObjects(det_objects); //in case an object was detected several times (disjoint sets originally, but prob. overlapping after region growing)
             pcl::PointCloud<PointNormal>::Ptr original_object_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco_cloud_ds);
-            pcl::io::savePCDFileBinary(reco.debug_path + "/result_after_objectGrowing.pcd", *original_object_cloud);
+            pcl::io::savePLYFileBinary(reco.debug_path + "/result_after_objectGrowing.ply", *original_object_cloud);
 
             cd_->upsampleObjectsAndPlanes(reco.reco_cloud, reco_cloud_ds, det_objects, ds_leaf_size_LV, reco.debug_path);
             pcl::PointCloud<PointNormal>::Ptr orig_objects_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco.reco_cloud);
-            pcl::io::savePCDFileBinary(reco.debug_path + "/final_objects.pcd", *orig_objects_cloud);
+            pcl::io::savePLYFileBinary(reco.debug_path + "/final_objects.ply", *orig_objects_cloud);
 
             std::string debug_model_path = reco.debug_path + "/model_objects/";
             std::vector<DetectedObject> objects_vec;
@@ -52,8 +52,8 @@ bool DetectAndMatchObjectsROS::extractPermanentObjects (extract_permanent_object
                 DetectedObject &obj = objects_vec[o];
                 std::string debug_obj_folder = debug_model_path + std::to_string(obj.getID()); //PPF uses the folder name as model_id!
                 boost::filesystem::create_directories(debug_obj_folder);
-                pcl::io::savePCDFile(debug_obj_folder + "/3D_model.pcd", *(obj.getObjectCloud())); //each detected reference object is saved in a folder for further use with PPF
-                pcl::io::savePCDFileBinary(debug_obj_folder + "/plane.pcd", *(obj.plane_cloud_));
+                pcl::io::savePLYFile(debug_obj_folder + "/3D_model.ply", *(obj.getObjectCloud())); //each detected reference object is saved in a folder for further use with PPF
+                pcl::io::savePLYFileBinary(debug_obj_folder + "/plane.ply", *(obj.plane_cloud_));
 
                 //create the object message
                 edith_msgs::Object obj_msg = fromDetObjToObjMsg(obj, table_id);
@@ -141,11 +141,11 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
             cd_->objectRegionGrowing(reco_cloud_ds, det_objects);  //this removes very big clusters after growing
             cd_->mergeObjects(det_objects); //in case an object was detected several times (disjoint sets originally, but prob. overlapping after region growing)
             pcl::PointCloud<PointNormal>::Ptr original_object_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco_cloud_ds);
-            pcl::io::savePCDFileBinary(reco.debug_path + "/result_after_objectGrowing.pcd", *original_object_cloud);
+            pcl::io::savePLYFileBinary(reco.debug_path + "/result_after_objectGrowing.ply", *original_object_cloud);
 
             cd_->upsampleObjectsAndPlanes(reco.reco_cloud, reco_cloud_ds, det_objects, ds_leaf_size_LV, reco.debug_path);
             pcl::PointCloud<PointNormal>::Ptr orig_objects_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco.reco_cloud);
-            pcl::io::savePCDFileBinary(reco.debug_path + "/final_objects.pcd", *orig_objects_cloud);
+            pcl::io::savePLYFileBinary(reco.debug_path + "/final_objects.ply", *orig_objects_cloud);
 
             for (size_t o = 0; o < det_objects.size(); o++) {
                 DetectedObject obj = cd_->fromPlaneIndObjToDetectedObject(reco.reco_cloud, det_objects[o]);
@@ -156,7 +156,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 table_object_map[table_id].push_back(obj);
                 nr_det_objects++;
 
-                pcl::io::savePCDFileBinary(reco.debug_path + "/"+ std::to_string(obj.getID()) +".pcd", *obj.getObjectCloud());
+                pcl::io::savePLYFileBinary(reco.debug_path + "/"+ std::to_string(obj.getID()) +".ply", *obj.getObjectCloud());
             }
         }
     }
@@ -199,12 +199,12 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 upsampleAndRefineObjects(orig_candidate_obj_cloud, curr_obj_vec);
                 pcl::PointCloud<PointNormal>::Ptr novel_objects_cloud = cd_->fromDetObjectVecToCloud(curr_obj_vec, false);
                 if (!novel_objects_cloud->empty())
-                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/curr_upsampled_objects_after_LV.pcd", *novel_objects_cloud);
+                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/curr_upsampled_objects_after_LV.ply", *novel_objects_cloud);
 
                 cd_->filterUnwantedObjects(curr_obj_vec, min_object_volume, min_object_size_ds);
                 novel_objects_cloud = cd_->fromDetObjectVecToCloud(curr_obj_vec, false);
                 if (!novel_objects_cloud->empty())
-                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/curr_final_objects_after_LV.pcd", *novel_objects_cloud);
+                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/curr_final_objects_after_LV.ply", *novel_objects_cloud);
             }
 
             //upsample and filter reference objects
@@ -213,12 +213,12 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 upsampleAndRefineObjects(orig_model_obj_cloud, ref_obj_vec);
                 pcl::PointCloud<PointNormal>::Ptr disappeared_objects_cloud = cd_->fromDetObjectVecToCloud(ref_obj_vec, false);
                 if (!disappeared_objects_cloud->empty())
-                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/ref_upsampled_objects_after_LV.pcd", *disappeared_objects_cloud);
+                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_upsampled_objects_after_LV.ply", *disappeared_objects_cloud);
 
                 cd_->filterUnwantedObjects(ref_obj_vec, min_object_volume, min_object_size_ds);
                 disappeared_objects_cloud = cd_->fromDetObjectVecToCloud(ref_obj_vec, false);
                 if (!disappeared_objects_cloud->empty())
-                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/ref_final_objects_after_LV.pcd", *disappeared_objects_cloud);
+                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_final_objects_after_LV.ply", *disappeared_objects_cloud);
             }
 
             if (curr_obj_vec.size() == 0) { //all objects removed from ref scene
@@ -366,6 +366,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
         int table_id = obj_table_id[obj.getID()];
         //create the object message
         edith_msgs::CandidateObject obj_msg = fromDetObjToCandidateObjMsg(obj, table_id);
+        obj_msg.state = edith_msgs::ObjectStateClass::NEW;
 
         message_store_->insertNamed(std::to_string(obj.getID()), obj_msg);
     }
@@ -374,6 +375,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
         int table_id = obj_table_id[obj.getID()];
         //create the object message
         edith_msgs::CandidateObject obj_msg = fromDetObjToCandidateObjMsg(obj, table_id);
+        obj_msg.state = edith_msgs::ObjectStateClass::STATIC;
 
         message_store_->insertNamed(std::to_string(obj.getID()), obj_msg);
     }
@@ -382,6 +384,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
         int table_id = obj_table_id[obj.getID()];
         //create the object message
         edith_msgs::CandidateObject obj_msg = fromDetObjToCandidateObjMsg(obj, table_id);
+        obj_msg.state = edith_msgs::ObjectStateClass::DISPLACED;
 
         message_store_->insertNamed(std::to_string(obj.getID()), obj_msg);
     }
@@ -447,7 +450,7 @@ void createNewModelFolder(DetectedObject &ro, std::string ppf_model_path) {
     ro.object_folder_path_ = orig_path;
 
     boost::filesystem::create_directories(orig_path);
-    pcl::io::savePCDFile(orig_path + "/3D_model.pcd", *ro.getObjectCloud()); //PPF will create a new model with the new cloud
+    pcl::io::savePLYFile(orig_path + "/3D_model.ply", *ro.getObjectCloud()); //PPF will create a new model with the new cloud
 }
 
 void removeModelFolder(DetectedObject ro, std::string ppf_model_path, std::string result_path) {
@@ -460,14 +463,14 @@ void removeModelFolder(DetectedObject ro, std::string ppf_model_path, std::strin
         int nr_pcd_files = 0;
         boost::filesystem::directory_iterator end_iter; // Default constructor for an iterator is the end iterator
         for (boost::filesystem::directory_iterator iter(dest_folder); iter != end_iter; ++iter) {
-            if (iter->path().extension() == ".pcd")
+            if (iter->path().extension() == ".ply")
                 ++nr_pcd_files;
         }
 
         //copy the folder to another directory. The model is already matched and should not be used anymore
         for (const auto& dirEnt : boost::filesystem::recursive_directory_iterator{orig_path})
         {
-            if (dirEnt.path().extension() == ".pcd") {
+            if (dirEnt.path().extension() == ".ply") {
                 const auto& path = dirEnt.path();
                 boost::filesystem::path dest_filename = path.stem().string() + std::to_string(nr_pcd_files) + path.extension().string();
                 boost::filesystem::copy(path, dest_folder / dest_filename);
@@ -544,14 +547,14 @@ void DetectAndMatchObjectsROS::createPPFModelFolders (std::map<int, std::vector<
 
             //check if already stored pcd file has the same size as the cloud from the DB
             pcl::PointCloud<PointNormal>::Ptr stored_pcd_file(new pcl::PointCloud<PointNormal>);
-            if (boost::filesystem::exists(obj_folder) && pcl::io::loadPCDFile(obj_folder + "/3D_model.pcd", *stored_pcd_file) == 0) { //successfully read the pcd-file
+            if (boost::filesystem::exists(obj_folder) && pcl::io::loadPCDFile(obj_folder + "/3D_model.ply", *stored_pcd_file) == 0) { //successfully read the pcd-file
                 if (stored_pcd_file->size() != obj.getObjectCloud()->size()) { //delete ppf-hash-file
                     boost::filesystem::remove_all(obj_folder);
                 }
             }
 
             boost::filesystem::create_directories(obj_folder); //if the folder exist already, it does not get created
-            pcl::io::savePCDFile(obj_folder + "/3D_model.pcd", *(obj.getObjectCloud()));
+            pcl::io::savePLYFile(obj_folder + "/3D_model.ply", *(obj.getObjectCloud()));
             obj.object_folder_path_ = obj_folder;
 
             good_model_ids.push_back(obj.getID());
@@ -637,8 +640,8 @@ std::map<int, Reconstruction> DetectAndMatchObjectsROS::prepareRecos (std::vecto
         }
         boost::filesystem::create_directories(debug_path_table);
 
-        pcl::io::savePCDFileBinary(debug_path_table + "/cv_hull.pcd", *convex_hull_pts);
-        pcl::io::savePCDFileBinary(debug_path_table + "/transformed_input_cloud.pcd", *reco_cloud);
+        pcl::io::savePLYFileBinary(debug_path_table + "/cv_hull.ply", *convex_hull_pts);
+        pcl::io::savePLYFileBinary(debug_path_table + "/transformed_input_cloud.ply", *reco_cloud);
 
         Reconstruction r(reco_cloud, convex_hull_pts, plane_coeffs, debug_path_table);
         recos[table_it->first] = r;
@@ -756,8 +759,12 @@ edith_msgs::Object DetectAndMatchObjectsROS::fromDetObjToObjMsg(const DetectedOb
     obj_msg.id = obj.getID();
     obj_msg.plane_id = table_id;
 
+    //remove normals from PC, otherwise open3d has problems converting it
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr obj_cloud_no_normals(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::copyPointCloud(*obj.getObjectCloud(), *obj_cloud_no_normals);
+
     sensor_msgs::PointCloud2 obj_cloud_msg;
-    pcl::toROSMsg(*obj.getObjectCloud(), obj_cloud_msg);
+    pcl::toROSMsg(*obj_cloud_no_normals, obj_cloud_msg);
     obj_msg.obj_cloud = obj_cloud_msg;
 
     sensor_msgs::PointCloud2 plane_cloud_msg;
@@ -781,11 +788,12 @@ edith_msgs::CandidateObject DetectAndMatchObjectsROS::fromDetObjToCandidateObjMs
 
     edith_msgs::CandidateObject candidate_obj_msg;
     candidate_obj_msg.object = obj_msg;
-    candidate_obj_msg.state = edith_msgs::ObjectStateClass::NEW;
 
     edith_msgs::ObjectMatch match_msg;
     match_msg.model_id = obj.match_.model_id;
     match_msg.object_id = obj.match_.object_id;
+
+    std::cout << "Transformation: " << obj.match_.transform<< std::endl;
 
     //convert Eigen4f to geometry_msg/Transform(vector+quaternion)
     geometry_msgs::Transform tf_msg;
