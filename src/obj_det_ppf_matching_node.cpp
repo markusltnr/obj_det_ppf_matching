@@ -45,7 +45,7 @@ bool DetectAndMatchObjectsROS::extractPermanentObjects (extract_permanent_object
                 obj.setObjectCloud(refined_normals_cloud);
                 objects_vec.push_back(obj);
             }
-            cd_->filterUnwantedObjects(objects_vec, min_object_volume, min_object_size_ds);
+            cd_->filterUnwantedObjects(objects_vec, min_object_volume, min_object_size_ds, max_object_size_ds);
 
             //save model objects to DB
             for (size_t o=0; o < objects_vec.size(); o++) {
@@ -201,7 +201,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 if (!novel_objects_cloud->empty())
                     pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/curr_upsampled_objects_after_LV.ply", *novel_objects_cloud);
 
-                cd_->filterUnwantedObjects(curr_obj_vec, min_object_volume, min_object_size_ds);
+                cd_->filterUnwantedObjects(curr_obj_vec, min_object_volume, min_object_size_ds, max_object_size_ds);
                 novel_objects_cloud = cd_->fromDetObjectVecToCloud(curr_obj_vec, false);
                 if (!novel_objects_cloud->empty())
                     pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/curr_final_objects_after_LV.ply", *novel_objects_cloud);
@@ -215,7 +215,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 if (!disappeared_objects_cloud->empty())
                     pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_upsampled_objects_after_LV.ply", *disappeared_objects_cloud);
 
-                cd_->filterUnwantedObjects(ref_obj_vec, min_object_volume, min_object_size_ds);
+                cd_->filterUnwantedObjects(ref_obj_vec, min_object_volume, min_object_size_ds, max_object_size_ds);
                 disappeared_objects_cloud = cd_->fromDetObjectVecToCloud(ref_obj_vec, false);
                 if (!disappeared_objects_cloud->empty())
                     pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_final_objects_after_LV.ply", *disappeared_objects_cloud);
@@ -245,8 +245,8 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 //region growing of static/displaced objects (should create more precise results if e.g. the model was smaller than die object or not precisely aligned
                 cd_->mergeObjectParts(ref_result, merge_object_parts_folder);
                 cd_->mergeObjectParts(curr_result, merge_object_parts_folder);
-                cd_->filterUnwantedObjects(ref_result, min_object_volume, min_object_size_ds);
-                cd_->filterUnwantedObjects(curr_result, min_object_volume, min_object_size_ds);
+                cd_->filterUnwantedObjects(ref_result, min_object_volume, min_object_size_ds, max_object_size_ds);
+                cd_->filterUnwantedObjects(curr_result, min_object_volume, min_object_size_ds, max_object_size_ds);
             }
 
             updateDetectedObjects(ref_result, curr_result);
@@ -908,8 +908,8 @@ bool DetectAndMatchObjectsROS::initialize (int argc, char ** argv)
     }
     */
     //optional, otherwise it will be stored in the working direcotry
-    nh_->param<std::string>("ppf_model_folder", ppf_model_path_, "/home/v4r/data");
-    nh_->param<std::string>("debug_path_det_obj", debug_path_det_obj_, "/home/v4r/data");
+    nh_->param<std::string>("ppf_model_folder", ppf_model_path_, "/home/v4r/data/change_detection");
+    nh_->param<std::string>("debug_path_det_obj", debug_path_det_obj_, "/home/v4r/data/change_detection");
 
 
     //setup the .ros directory if it does not exist and use it if not paths are given for ppf_model_folder and debug_path_det_obj
@@ -977,4 +977,3 @@ int main (int argc, char ** argv)
     ros::spin ();
     return 0;
 }
-
