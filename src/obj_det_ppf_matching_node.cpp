@@ -908,8 +908,9 @@ bool DetectAndMatchObjectsROS::initialize (int argc, char ** argv)
     }
     */
     //optional, otherwise it will be stored in the working direcotry
-    nh_->getParam("ppf_model_folder", ppf_model_path_);
-    nh_->getParam("debug_path_det_obj", debug_path_det_obj_);
+    nh_->param<std::string>("ppf_model_folder", ppf_model_path_, "/home/v4r/data");
+    nh_->param<std::string>("debug_path_det_obj", debug_path_det_obj_, "/home/v4r/data");
+
 
     //setup the .ros directory if it does not exist and use it if not paths are given for ppf_model_folder and debug_path_det_obj
     std::string ros_log_env;
