@@ -7,6 +7,9 @@ set (CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Release)
 
 find_package(OpenCV 3 REQUIRED)
+find_package(OpenMP)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 
 
 #SET(CMAKE_PREFIX_PATH "/home/edith/Software/pcl-1.10.0/build/install")
@@ -35,7 +38,7 @@ add_subdirectory(v4r_ppf) #this only works for folders that are physically a sub
 find_package( PCL REQUIRED )
 
 find_package(Boost REQUIRED COMPONENTS system program_options)
-#find_package(OpenMP)
+
 #find_package(CMPH REQUIRED)
 # Glog  -- only works if glog was built with cmake ?
 # libgoogle-glog-dev package doesn't include the cmake config files
@@ -185,6 +188,8 @@ add_executable(${PROJECT_NAME}_node src/obj_det_ppf_matching_node.cpp
 ## same as for the lib${PCL_LIBRARIES}rary above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+target_compile_options(${PROJECT_NAME}_node PRIVATE ${OpenMP_FLAGS})
+
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
    ppf-recognizer
@@ -192,7 +197,10 @@ target_link_libraries(${PROJECT_NAME}_node
    ${PCL_LIBRARIES}
    ${OpenCV_LIBS}
    Boost::program_options
+   ${OpenMP_LIBS}
  )
+
+
 
 
 #############
