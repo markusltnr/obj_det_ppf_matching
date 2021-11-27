@@ -30,6 +30,8 @@
 #include <sys/types.h>
 #include <pwd.h>
 
+#include<omp.h>
+
 using namespace edith_msgs;
 
 typedef pcl::PointXYZRGBNormal PointNormal;
@@ -102,6 +104,13 @@ private:
     std::tuple<int, DetectedObject> fromMsgToDetObj(edith_msgs::Object obj_msg); //returns table_id and object
     edith_msgs::Object fromDetObjToObjMsg(const DetectedObject obj, int table_id);
     edith_msgs::CandidateObject fromDetObjToCandidateObjMsg(const DetectedObject obj, int table_id);
+
+    void saveResultAsPCD(    std::map<int, DetectedObject> new_obj,
+    std::map<int, DetectedObject> removed_obj,
+    std::map<int, DetectedObject> ref_displaced_obj,
+    std::map<int, DetectedObject> curr_displaced_obj,
+    std::map<int, DetectedObject> curr_static_obj,
+    std::map<int, DetectedObject> ref_static_obj);
 
 
     //    boost::shared_ptr<image_transport::ImageTransport> it_;
