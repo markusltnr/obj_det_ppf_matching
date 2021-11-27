@@ -29,11 +29,11 @@ bool DetectAndMatchObjectsROS::extractPermanentObjects (extract_permanent_object
             cd_->objectRegionGrowing(reco_cloud_ds, det_objects);  //this removes very big clusters after growing
             cd_->mergeObjects(det_objects); //in case an object was detected several times (disjoint sets originally, but prob. overlapping after region growing)
             pcl::PointCloud<PointNormal>::Ptr original_object_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco_cloud_ds);
-            pcl::io::savePLYFileBinary(reco.debug_path + "/result_after_objectGrowing.ply", *original_object_cloud);
+            pcl::io::savePCDFileBinary(reco.debug_path + "/result_after_objectGrowing.pcd", *original_object_cloud);
 
             cd_->upsampleObjectsAndPlanes(reco.reco_cloud, reco_cloud_ds, det_objects, ds_leaf_size_LV, reco.debug_path);
             pcl::PointCloud<PointNormal>::Ptr orig_objects_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco.reco_cloud);
-            pcl::io::savePLYFileBinary(reco.debug_path + "/final_objects.ply", *orig_objects_cloud);
+            pcl::io::savePCDFileBinary(reco.debug_path + "/final_objects.pcd", *orig_objects_cloud);
 
             std::string debug_model_path = reco.debug_path + "/model_objects/";
             std::vector<DetectedObject> objects_vec;
@@ -52,8 +52,8 @@ bool DetectAndMatchObjectsROS::extractPermanentObjects (extract_permanent_object
                 DetectedObject &obj = objects_vec[o];
                 std::string debug_obj_folder = debug_model_path + std::to_string(obj.getID()); //PPF uses the folder name as model_id!
                 boost::filesystem::create_directories(debug_obj_folder);
-                pcl::io::savePLYFile(debug_obj_folder + "/3D_model.ply", *(obj.getObjectCloud())); //each detected reference object is saved in a folder for further use with PPF
-                pcl::io::savePLYFileBinary(debug_obj_folder + "/plane.ply", *(obj.plane_cloud_));
+                pcl::io::savePCDFile(debug_obj_folder + "/3D_model.pcd", *(obj.getObjectCloud())); //each detected reference object is saved in a folder for further use with PPF
+                pcl::io::savePCDFileBinary(debug_obj_folder + "/plane.pcd", *(obj.plane_cloud_));
 
                 //create the object message
                 edith_msgs::Object obj_msg = fromDetObjToObjMsg(obj, table_id);
@@ -141,11 +141,11 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
             cd_->objectRegionGrowing(reco_cloud_ds, det_objects);  //this removes very big clusters after growing
             cd_->mergeObjects(det_objects); //in case an object was detected several times (disjoint sets originally, but prob. overlapping after region growing)
             pcl::PointCloud<PointNormal>::Ptr original_object_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco_cloud_ds);
-            pcl::io::savePLYFileBinary(reco.debug_path + "/result_after_objectGrowing.ply", *original_object_cloud);
+            pcl::io::savePCDFileBinary(reco.debug_path + "/result_after_objectGrowing.pcd", *original_object_cloud);
 
             cd_->upsampleObjectsAndPlanes(reco.reco_cloud, reco_cloud_ds, det_objects, ds_leaf_size_LV, reco.debug_path);
             pcl::PointCloud<PointNormal>::Ptr orig_objects_cloud = cd_->fromObjectVecToObjectCloud(det_objects, reco.reco_cloud);
-            pcl::io::savePLYFileBinary(reco.debug_path + "/final_objects.ply", *orig_objects_cloud);
+            pcl::io::savePCDFileBinary(reco.debug_path + "/final_objects.pcd", *orig_objects_cloud);
 
             for (size_t o = 0; o < det_objects.size(); o++) {
                 DetectedObject obj = cd_->fromPlaneIndObjToDetectedObject(reco.reco_cloud, det_objects[o]);
@@ -156,7 +156,7 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 table_object_map[table_id].push_back(obj);
                 nr_det_objects++;
 
-                pcl::io::savePLYFileBinary(reco.debug_path + "/"+ std::to_string(obj.getID()) +".ply", *obj.getObjectCloud());
+                pcl::io::savePLYFileBinary(reco.debug_path + "/"+ std::to_string(obj.getID()) +".pcd", *obj.getObjectCloud());
             }
         }
     }
@@ -199,12 +199,12 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 upsampleAndRefineObjects(orig_candidate_obj_cloud, curr_obj_vec);
                 pcl::PointCloud<PointNormal>::Ptr novel_objects_cloud = cd_->fromDetObjectVecToCloud(curr_obj_vec, false);
                 if (!novel_objects_cloud->empty())
-                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/curr_upsampled_objects_after_LV.ply", *novel_objects_cloud);
+                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/curr_upsampled_objects_after_LV.pcd", *novel_objects_cloud);
 
                 cd_->filterUnwantedObjects(curr_obj_vec, min_object_volume, min_object_size_ds, max_object_size_ds);
                 novel_objects_cloud = cd_->fromDetObjectVecToCloud(curr_obj_vec, false);
                 if (!novel_objects_cloud->empty())
-                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/curr_final_objects_after_LV.ply", *novel_objects_cloud);
+                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/curr_final_objects_after_LV.pcd", *novel_objects_cloud);
             }
 
             //upsample and filter reference objects
@@ -213,12 +213,12 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
                 upsampleAndRefineObjects(orig_model_obj_cloud, ref_obj_vec);
                 pcl::PointCloud<PointNormal>::Ptr disappeared_objects_cloud = cd_->fromDetObjectVecToCloud(ref_obj_vec, false);
                 if (!disappeared_objects_cloud->empty())
-                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_upsampled_objects_after_LV.ply", *disappeared_objects_cloud);
+                    pcl::io::savePCDFileBinary(debug_path_det_obj_ + "/ref_upsampled_objects_after_LV.pcd", *disappeared_objects_cloud);
 
                 cd_->filterUnwantedObjects(ref_obj_vec, min_object_volume, min_object_size_ds, max_object_size_ds);
                 disappeared_objects_cloud = cd_->fromDetObjectVecToCloud(ref_obj_vec, false);
                 if (!disappeared_objects_cloud->empty())
-                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_final_objects_after_LV.ply", *disappeared_objects_cloud);
+                    pcl::io::savePLYFileBinary(debug_path_det_obj_ + "/ref_final_objects_after_LV.pcd", *disappeared_objects_cloud);
             }
 
             if (curr_obj_vec.size() == 0) { //all objects removed from ref scene
@@ -396,6 +396,8 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
     std::cout << "Static objects in reference: " << ref_static_obj << std::endl;
     std::cout << "Static objects in current: " << curr_static_obj << std::endl;
 
+    saveResultAsPCD( new_obj,removed_obj,ref_displaced_obj,curr_displaced_obj,curr_static_obj,ref_static_obj); 
+
 
     //write the latest used ID to file --> find the highest object ID for models (candidate objects get deleted anyway for each run)
     std::ofstream id_file;
@@ -405,6 +407,92 @@ bool DetectAndMatchObjectsROS::detectAndCompareObjects (det_and_compare_obj::Req
 
     ROS_INFO("Finished service call");
     return true;
+}
+
+void DetectAndMatchObjectsROS::saveResultAsPCD(    std::map<int, DetectedObject> new_obj,
+    std::map<int, DetectedObject> removed_obj,
+    std::map<int, DetectedObject> ref_displaced_obj,
+    std::map<int, DetectedObject> curr_displaced_obj,
+    std::map<int, DetectedObject> curr_static_obj,
+    std::map<int, DetectedObject> ref_static_obj) {
+      //create point clouds of detected objects to save results as pcd-files
+            pcl::PointCloud<PointNormal>::Ptr ref_removed_objects_cloud(new pcl::PointCloud<PointNormal>);
+            pcl::PointCloud<PointLabel>::Ptr ref_displaced_objects_cloud(new pcl::PointCloud<PointLabel>);
+            pcl::PointCloud<PointLabel>::Ptr ref_static_objects_cloud(new pcl::PointCloud<PointLabel>);
+            pcl::PointCloud<PointNormal>::Ptr curr_new_objects_cloud(new pcl::PointCloud<PointNormal>);
+            pcl::PointCloud<PointLabel>::Ptr curr_displaced_objects_cloud(new pcl::PointCloud<PointLabel>);
+            pcl::PointCloud<PointLabel>::Ptr curr_static_objects_cloud(new pcl::PointCloud<PointLabel>);
+
+            //transform maps to vectors
+            std::vector<DetectedObject> removed_obj_vec, new_obj_vec, ref_dis_obj_vec, curr_dis_obj_vec, ref_static_obj_vec, curr_static_obj_vec;
+            removed_obj_vec = fromMapToValVec(removed_obj);
+            new_obj_vec = fromMapToValVec(new_obj);
+            ref_dis_obj_vec = fromMapToValVec(ref_displaced_obj);
+            curr_dis_obj_vec = fromMapToValVec(curr_displaced_obj);
+            ref_static_obj_vec = fromMapToValVec(ref_static_obj);
+            curr_static_obj_vec = fromMapToValVec(curr_static_obj);
+
+            for (auto const & o : removed_obj) {
+                *ref_removed_objects_cloud += *(o.second.getObjectCloud());
+            }
+            if (!ref_removed_objects_cloud->empty())
+                pcl::io::savePCDFile(debug_path_det_obj_ + "/ref_removed_objects.pcd", *ref_removed_objects_cloud);
+
+            for (auto const & o : new_obj) {
+                *curr_new_objects_cloud += *(o.second.getObjectCloud());
+            }
+            if (!curr_new_objects_cloud->empty())
+                pcl::io::savePCDFile(debug_path_det_obj_ + "/curr_new_objects.pcd", *curr_new_objects_cloud);
+
+            //assign labels to the object based on the matches for DISPLACED objects
+            for (size_t o = 0; o < ref_dis_obj_vec.size(); o++) {
+                const DetectedObject &ref_object = ref_dis_obj_vec[o];
+                auto curr_obj_iter = std::find_if( curr_dis_obj_vec.begin(), curr_dis_obj_vec.end(),[ref_object]
+                                                   (DetectedObject const &o) {return o.match_.model_id == ref_object.getID(); });
+                const DetectedObject &curr_object = *curr_obj_iter;
+                pcl::PointCloud<PointLabel>::Ptr ref_objects_cloud(new pcl::PointCloud<PointLabel>);
+                pcl::PointCloud<PointLabel>::Ptr curr_objects_cloud(new pcl::PointCloud<PointLabel>);
+                pcl::copyPointCloud(*ref_object.getObjectCloud(), *ref_objects_cloud);
+                pcl::copyPointCloud(*curr_object.getObjectCloud(), *curr_objects_cloud);
+                for (size_t i = 0; i < ref_objects_cloud->size(); i++) {
+                    ref_objects_cloud->points[i].label=ref_object.getID() * 20;
+                }
+                for (size_t i = 0; i < curr_objects_cloud->size(); i++) {
+                    curr_objects_cloud->points[i].label = ref_object.getID() * 20;
+                }
+                *ref_displaced_objects_cloud += *ref_objects_cloud;
+                *curr_displaced_objects_cloud += *curr_objects_cloud;
+            }
+
+            if (!ref_displaced_objects_cloud->empty())
+                pcl::io::savePCDFile(debug_path_det_obj_ + "/ref_displaced_objects.pcd", *ref_displaced_objects_cloud);
+            if (!curr_displaced_objects_cloud->empty())
+                pcl::io::savePCDFile(debug_path_det_obj_ + "/curr_displaced_objects.pcd", *curr_displaced_objects_cloud);
+
+
+            //assign labels to the object based on the matches for STATIC objects
+            for (size_t o = 0; o < ref_static_obj_vec.size(); o++) {
+                const DetectedObject &ref_object = ref_static_obj_vec[o];
+                auto curr_obj_iter = std::find_if( curr_static_obj_vec.begin(), curr_static_obj_vec.end(),[ref_object]
+                                                   (DetectedObject const &o) {return o.match_.model_id == ref_object.getID(); });
+                const DetectedObject &curr_object = *curr_obj_iter;
+                pcl::PointCloud<PointLabel>::Ptr ref_objects_cloud(new pcl::PointCloud<PointLabel>);
+                pcl::PointCloud<PointLabel>::Ptr curr_objects_cloud(new pcl::PointCloud<PointLabel>);
+                pcl::copyPointCloud(*ref_object.getObjectCloud(), *ref_objects_cloud);
+                pcl::copyPointCloud(*curr_object.getObjectCloud(), *curr_objects_cloud);
+                for (size_t i = 0; i < ref_objects_cloud->size(); i++) {
+                    ref_objects_cloud->points[i].label = ref_object.getID() * 20;
+                }
+                for (size_t i = 0; i < curr_objects_cloud->size(); i++) {
+                    curr_objects_cloud->points[i].label = ref_object.getID() * 20;
+                }
+                *ref_static_objects_cloud += *ref_objects_cloud;
+                *curr_static_objects_cloud += *curr_objects_cloud;
+            }
+            if (!ref_static_objects_cloud->empty())
+                pcl::io::savePCDFile(debug_path_det_obj_ + "/ref_static_objects.pcd", *ref_static_objects_cloud);
+            if (!curr_static_objects_cloud->empty())
+                pcl::io::savePCDFile(debug_path_det_obj_ + "/curr_static_objects.pcd", *curr_static_objects_cloud);
 }
 
 int DetectAndMatchObjectsROS::extractTableID(const pcl::PointCloud<pcl::PointXYZL>::Ptr label_cloud, const DetectedObject &obj) {
@@ -450,7 +538,7 @@ void createNewModelFolder(DetectedObject &ro, std::string ppf_model_path) {
     ro.object_folder_path_ = orig_path;
 
     boost::filesystem::create_directories(orig_path);
-    pcl::io::savePLYFile(orig_path + "/3D_model.ply", *ro.getObjectCloud()); //PPF will create a new model with the new cloud
+    pcl::io::savePCDFile(orig_path + "/3D_model.pcd", *ro.getObjectCloud()); //PPF will create a new model with the new cloud
 }
 
 void removeModelFolder(DetectedObject ro, std::string ppf_model_path, std::string result_path) {
@@ -547,14 +635,14 @@ void DetectAndMatchObjectsROS::createPPFModelFolders (std::map<int, std::vector<
 
             //check if already stored pcd file has the same size as the cloud from the DB
             pcl::PointCloud<PointNormal>::Ptr stored_pcd_file(new pcl::PointCloud<PointNormal>);
-            if (boost::filesystem::exists(obj_folder) && pcl::io::loadPCDFile(obj_folder + "/3D_model.ply", *stored_pcd_file) == 0) { //successfully read the pcd-file
+            if (boost::filesystem::exists(obj_folder) && pcl::io::loadPCDFile(obj_folder + "/3D_model.pcd", *stored_pcd_file) == 0) { //successfully read the pcd-file
                 if (stored_pcd_file->size() != obj.getObjectCloud()->size()) { //delete ppf-hash-file
                     boost::filesystem::remove_all(obj_folder);
                 }
             }
 
             boost::filesystem::create_directories(obj_folder); //if the folder exist already, it does not get created
-            pcl::io::savePLYFile(obj_folder + "/3D_model.ply", *(obj.getObjectCloud()));
+            pcl::io::savePCDFile(obj_folder + "/3D_model.pcd", *(obj.getObjectCloud()));
             obj.object_folder_path_ = obj_folder;
 
             good_model_ids.push_back(obj.getID());
@@ -640,8 +728,8 @@ std::map<int, Reconstruction> DetectAndMatchObjectsROS::prepareRecos (std::vecto
         }
         boost::filesystem::create_directories(debug_path_table);
 
-        pcl::io::savePLYFileBinary(debug_path_table + "/cv_hull.ply", *convex_hull_pts);
-        pcl::io::savePLYFileBinary(debug_path_table + "/transformed_input_cloud.ply", *reco_cloud);
+        pcl::io::savePCDFileBinary(debug_path_table + "/cv_hull.pcd", *convex_hull_pts);
+        pcl::io::savePCDFileBinary(debug_path_table + "/transformed_input_cloud.pcd", *reco_cloud);
 
         Reconstruction r(reco_cloud, convex_hull_pts, plane_coeffs, debug_path_table);
         recos[table_it->first] = r;
@@ -973,7 +1061,11 @@ int main (int argc, char ** argv)
 {
     ros::init (argc, argv, "obj_det_and_matching");
     DetectAndMatchObjectsROS m;
+
+    std::cout << "!!!!!!!!!!!!!!!!" << omp_get_num_threads() << std::endl;
+
     m.initialize (argc, argv);
     ros::spin ();
     return 0;
 }
+
